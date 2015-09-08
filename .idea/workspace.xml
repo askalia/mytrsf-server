@@ -23,10 +23,19 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name=".env" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name=".env" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/.env">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="3" selection-start="3" selection-end="3" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="598">
+            <state line="0" column="3" selection-start="3" selection-end="3" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="375">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="composer.json" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/composer.json">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="19" column="42" selection-start="608" selection-end="608" vertical-scroll-proportion="0.44425088" vertical-offset="30" max-vertical-offset="930">
               <folding />
             </state>
           </provider>
@@ -43,6 +52,7 @@
     <option name="changedFiles">
       <list>
         <option value="$PROJECT_DIR$/.env" />
+        <option value="$PROJECT_DIR$/composer.json" />
       </list>
     </option>
   </component>
@@ -178,6 +188,13 @@
     <entry file="file://$PROJECT_DIR$/.env">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="3" selection-start="3" selection-end="3" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="598">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/composer.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19" column="42" selection-start="608" selection-end="608" vertical-scroll-proportion="0.44425088" vertical-offset="30" max-vertical-offset="930">
           <folding />
         </state>
       </provider>
