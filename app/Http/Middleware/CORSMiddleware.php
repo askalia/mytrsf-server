@@ -25,9 +25,11 @@ class CORSMiddleware
         //return $next($request);
 
         $headers = [
-              'Access-Control-Allow-Origin' => '*',
+              //'Access-Control-Allow-Origin' => '*',
+              //'Access-Control-Allow-Credentials' => true,
                  'Access-Control-Allow-Methods'=> 'POST, GET, OPTIONS, PUT, DELETE',
-                 'Access-Control-Allow-Headers'=> 'Content-Type, X-Auth-Token, Origin'
+                 //'Access-Control-Allow-Headers'=> 'Content-Type, X-Auth-Token, Origin'
+                //'Access-Control-Allow-Headers'=> '*'
              ];
         //if($request->getMethod() == "OPTIONS")
         //{

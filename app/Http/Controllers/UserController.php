@@ -6,8 +6,11 @@ use Illuminate\Http\Request;
 
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
-use App\User;
+use App\Entities\User;
 use Illuminate\Http\Response;
+
+use JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class UserController extends Controller
 {
@@ -71,12 +74,16 @@ class UserController extends Controller
      * @param  int  $id
      * @return Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
+        if (!$user = JWTAuth::parseToken()->authenticate())
+        {
+            return response()->json('user_not_found', Response::HTTP_NOT_FOUND);
+        }
         $this->validate($request, User::getValidators());
 
         // store
-        $user = User::find($id);
+        //$user = User::find($id);
         $getParams = \Input::all();
         foreach ($getParams as $getProp => $value)
         {
@@ -90,6 +97,15 @@ class UserController extends Controller
         $toast = 'profile_update_success';
 
         return response()->json(compact('toast', 'user'), Response::HTTP_OK);
+    }
+
+    public function getInventory()
+    {
+        if (!$user = JWTAuth::parseToken()->authenticate())
+        {
+            return response()->json('user_not_found', Response::HTTP_NOT_FOUND);
+        }
+        return response()->json($user->products()->getResults(), Response::HTTP_OK);
     }
 
     /**

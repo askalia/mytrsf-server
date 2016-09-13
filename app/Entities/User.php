@@ -1,6 +1,8 @@
 <?php
 
-namespace App;
+namespace App\Entities;
+
+//use App\Entities\Product;
 
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
@@ -17,14 +19,14 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
      *
      * @var string
      */
-    protected $table = 'users';
+    protected $table = 'user';
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = ['firstname', 'lastname', 'email', 'password'];
+    protected $fillable = ['*'];
 
     /**
      * The attributes excluded from the model's JSON form.
@@ -32,6 +34,11 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
      * @var array
      */
     protected $hidden = ['password', 'remember_token'];
+
+    public function products()
+    {
+        return $this->belongsToMany('App\Entities\Product');
+    }
 
     public static function getValidators()
     {

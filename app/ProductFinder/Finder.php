@@ -9,65 +9,109 @@
 namespace App\ProductFinder;
 
 use ApaiIO\Configuration\GenericConfiguration;
+use ApaiIO\Operations\Lookup;
 use ApaiIO\Operations\Search;
 use ApaiIO\ApaiIO;
+
+use App\Entities\Category;
+use App\Entities\Product;
+use App\ProductFinder\AmazonAWS\Builders\ItemBuilder;
+use Doctrine\Tests\Common\Persistence\Mapping\SimpleAnnotationDriver;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\DependencyInjection\SimpleXMLElement;
 
 
 class Finder
 {
-
-    public function find($_keyword, $_category)
+    public function find($_keyword, $_category, $_lang)
     {
-        $this->checkCategoryIsValid($_category);
+        $useCache = false;
 
-        $conf = new GenericConfiguration();
-        $conf
-            ->setCountry('fr')
-            ->setAccessKey('AKIAIPT5MLUKB3HZ7MOA')
-            ->setSecretKey('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')
-            ->setAssociateTag('trysurfing-21');
+        //if (!$useCache || ! Storage::exists(env('AWS_PRODUCT_API_CACHE_FILE')))
+        //{
+            $this->checkCategoryIsValid($_category);
 
-        $apaiIO = new ApaiIO($conf);
+            $conf = new GenericConfiguration();
+            $conf
+                ->setCountry($_lang ?: env('AWS_PRODUCT_API_DEFAULT_LANG'))
+                ->setAccessKey(env('AWS_PRODUCT_API_ACCESS_KEY'))
+                ->setSecretKey(env('AWS_PRODUCT_API_SECRET_KEY'))
+                ->setAssociateTag(env('AWS_PRODUCT_API_ASSOCIATE_TAG'));
 
-        $search = new Search();
-        //$search->setCategory('DVD');
-        //$search->setActor('Bruce Willis');
+            $apaiIO = new ApaiIO($conf);
 
-        $search->setCategory($_category ? : 'Electronics');
-        $search->setKeywords($_keyword);
-        $search->setResponseGroup(['Medium']);
+            $search = new Search();
+            $search->setCategory($_category ? : env('AWS_PRODUCT_API_DEFAULT_CATEGORY'));
+            $search->setKeywords($_keyword);
+            $search->setResponseGroup([env('AWS_PRODUCT_API_DEFAULT_RESPONSEGROUP')]);
+
+            $formattedResponse = $apaiIO->runOperation($search);
+
+            /*if (!Storage::exists(static::AWS_CACHE_XML))
+            {
+                $dom = new \DOMDocument("1.0");
+                $dom->preserveWhiteSpace = false;
+                $dom->formatOutput = true;
+                $dom->loadXML($formattedResponse);
+                Storage::disk('local')->put(env('AWS_PRODUCT_API_CACHE_FILE'), $dom->saveXML());
+            }*/
+        //}
+        //else {
+        //    $formattedResponse = Storage::get(env('AWS_PRODUCT_API_CACHE_FILE'));
+        //}
+
+        /*
+        $xml = new \SimpleXMLElement($formattedResponse);
+        $xml->formatOutput = true;
+        */
 
 
-
-        $formattedResponse = $apaiIO->runOperation($search);
-
-        return $this->filterResults($formattedResponse);
+        return $this->buildDisplayableItems($formattedResponse);
     }
 
-    private function filterResults($results)
+    /**
+     * @param $_productRef ASIN reference
+     */
+    public function lookupItem($_productRef, $_lang, $_userId)
+    {
+        $conf = new GenericConfiguration();
+        $conf
+            ->setCountry($_lang ?: env('AWS_PRODUCT_API_DEFAULT_LANG'))
+            ->setAccessKey(env('AWS_PRODUCT_API_ACCESS_KEY'))
+            ->setSecretKey(env('AWS_PRODUCT_API_SECRET_KEY'))
+            ->setAssociateTag(env('AWS_PRODUCT_API_ASSOCIATE_TAG'));
+        $apaiIO = new ApaiIO($conf);
+        $itemLookup = new Lookup();
+        $itemLookup->setIdType('ASIN');
+        $itemLookup->setItemId($_productRef);
+        $itemLookup->setResponseGroup([env('AWS_PRODUCT_API_DEFAULT_RESPONSEGROUP')]);
+        $formattedResults = $apaiIO->runOperation($itemLookup);
+        return $this->buildFullfilledItem($formattedResults);
+    }
+
+    private function buildDisplayableItems($results)
     {
         $filteredResults = [];
         $xmlDoc = new \SimpleXMLElement($results);
-        $xmlDoc->registerXPathNamespace("ns", "http://webservices.amazon.com/AWSECommerceService/2011-08-01");
+        $xmlDoc->registerXPathNamespace("ns", env('AWS_PRODUCT_API_XMLNS'));
         $listNodes = $xmlDoc->xpath('/ns:ItemSearchResponse/ns:Items/ns:Item');
 
         foreach ($listNodes as $node)
         {
-            $filteredResults[] = $this->buildItem($node);
+            $filteredResults[] = ItemBuilder::buildFromXML(Product::class, $node);
         }
 
         return $filteredResults;
     }
-    private function buildItem($node)
+    private function buildFullfilledItem($results)
     {
-        $newItem = new AWSItem();
-        $newItem->fullname = (string) $node->ItemAttributes->Title;
-        $newItem->pictures = [ 'large' => (string) $node->LargeImage->URL,
-                                'small'  => (string) $node->SmallImage->URL,
-                                'medium' => (string) $node->MediumImage->URL,
-                             ];
-        //unset($node['ItemLinks'], $node['SmallImage'], $node['ImageSets']);
-        return $newItem;
+        $filteredResults = [];
+        $xmlDoc = new \SimpleXMLElement($results);
+        $xmlDoc->registerXPathNamespace("ns", env('AWS_PRODUCT_API_XMLNS'));
+        $itemNode = $xmlDoc->xpath('/ns:ItemLookupResponse/ns:Items/ns:Item[1]')[0];
+
+        return ItemBuilder::buildFromXML(Product::class, $itemNode);
+
     }
 
     private function checkCategoryIsValid($_category)

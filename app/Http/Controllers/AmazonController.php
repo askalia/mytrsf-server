@@ -13,11 +13,12 @@ use Illuminate\Http\Response;
 class AmazonController extends Controller
 {
 
+    //// B00LVVJW74
     public function search()
     {
         $productFinder = app('ProductFinder');
         try {
-            $results = $productFinder->find(\Input::get('keyword'), \Input::get('category'));
+            $results = $productFinder->find(\Input::get('keyword'), \Input::get('category'), \Input::get('lang'));
             return response()->json($results, 200);
         }
         catch (\InvalidArgumentException $e)
